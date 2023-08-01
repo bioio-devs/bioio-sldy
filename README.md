@@ -5,6 +5,8 @@
 
 A BioIO reader plugin for reading 3i slidebook (SLDY) images.
 
+This plugin is intended to be used in conjunction with [bioio](https://github.com/bioio-devs/bioio)
+
 ---
 
 ## Installation

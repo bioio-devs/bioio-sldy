@@ -45,6 +45,8 @@ class Reader(reader.Reader):
         If the file is not supported by this reader.
     """
 
+    _scenes: typing.Optional[typing.Tuple[str, ...]] = None
+
     @staticmethod
     def _is_supported_image(
         fs: AbstractFileSystem, path: str, **kwargs: typing.Any

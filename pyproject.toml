@@ -32,7 +32,7 @@ dependencies = [
   "fsspec>=2022.8.0",
   "numpy>=1.16,<2",
   "PyYAML>=6.0",
-  "xarray>=0.16.1,<2023.02.0",
+  "xarray>=0.16.1",
 ]
 
 [project.urls]

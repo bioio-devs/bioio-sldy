@@ -1,0 +1,10 @@
+default_context:
+    author_name: "Sean Meharry"
+    author_email: "seanm@alleninstitute.org"
+    hosting_github_username_or_org: "bioio-devs"
+    project_name: "bioio-sldy"
+    project_slug: "bioio-sldy"
+    python_slug: "bioio_sldy"
+    project_short_description: "A BioIO reader plugin for reading 3i slidebook (SLDY) images."
+    hosting_pypi_username: "bioio-devs"
+    license: "MIT License"

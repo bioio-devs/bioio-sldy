@@ -1,7 +1,7 @@
 # bioio-sldy
 
-[![Build Status](https://github.com/bioio-devs/bioio-sldy/workflows/CI/badge.svg)](https://github.com/bioio-devs/bioio-sldy/actions)
-[![Documentation](https://github.com/bioio-devs/bioio-sldy/workflows/Documentation/badge.svg)](https://bioio-devs.github.io/bioio-sldy)
+[![Build Status](https://github.com/bioio-devs/bioio-sldy/actions/workflows/ci.yml/badge.svg)](https://github.com/bioio-devs/bioio-sldy/actions)
+[![Documentation](https://github.com/bioio-devs/bioio-sldy/actions/workflows/docs.yml/badge.svg)](https://bioio-devs.github.io/bioio-sldy)
 
 A BioIO reader plugin for reading 3i slidebook (SLDY) images.
 

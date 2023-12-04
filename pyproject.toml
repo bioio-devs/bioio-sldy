@@ -40,7 +40,6 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/bioio-devs/bioio-sldy"
 "Bug Tracker" = "https://github.com/bioio-devs/bioio-sldy/issues"
-Documentation = "https://bioio-devs.github.io/bioio-sldy"
 "User Support" = "https://github.com/bioio-devs/bioio-sldy/issues"
 
 # extra dependencies
@@ -57,17 +56,6 @@ test = [
   "pytest-cov>=2.9.0",
   "pytest-raises>=0.11",
   "types-PyYAML>=6.0.12.9",
-]
-docs = [
-  # Sphinx + Doc Gen + Styling
-  "m2r2>=0.2.7",
-  "Sphinx>=4.0.0",
-  "furo>=2022.4.7",
-  # Extensions
-  "numpydoc",
-  "sphinx-copybutton",
-  # TODO: Pins
-  "docutils>=0.18,<0.19",
 ]
 
 # entry points
@@ -110,7 +98,6 @@ ignore = [
   "Justfile",
   ".cookiecutter.yaml",
   "scripts/*",
-  "*docs/*",
 ]
 
 [tool.mypy]

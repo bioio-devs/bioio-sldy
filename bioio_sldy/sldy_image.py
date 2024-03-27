@@ -269,7 +269,7 @@ class SldyImage:
             if not self._data_paths:
                 self._data_paths = {
                     self.image_directory / filename
-                    for filename in os.listdir(f"{self.image_directory}/")
+                    for filename in os.listdir(f"{self.image_directory}")
                     if filename.startswith(self._data_file_prefix)
                     and filename.endswith(".npy")
                 }

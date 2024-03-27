@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import os
 import pathlib
 import re
 import typing
@@ -32,6 +33,7 @@ class SldyImage:
     """
 
     _metadata: typing.Optional[typing.Dict[str, typing.Optional[dict]]] = None
+    _data_paths: typing.Set[pathlib.Path] = set()
 
     @staticmethod
     def _yaml_mapping(loader: yaml.Loader, node: yaml.Node, deep: bool = False) -> dict:
@@ -173,6 +175,7 @@ class SldyImage:
         )
 
         self._fs = fs
+        self._data_file_prefix = data_file_prefix
         self.image_directory = image_directory
         self.id = self.image_directory.stem
         self._channel_record = SldyImage._get_yaml_contents(
@@ -204,17 +207,12 @@ class SldyImage:
             float(interplane_spacing) if interplane_spacing is not None else None
         )
 
-        data_path_matcher = fs.glob(self.image_directory / f"{data_file_prefix}*.npy")
-        self._data_paths = set(
-            [pathlib.Path(data_path) for data_path in data_path_matcher]
-        )
-
         # Create mapping of timepoint / channel to their respective data paths
         self._timepoint_to_data_paths = SldyImage._get_dim_to_data_path_map(
-            self._data_paths, timepoint_file_prefix
+            self.data_paths, timepoint_file_prefix
         )
         self._channel_to_data_paths = SldyImage._get_dim_to_data_path_map(
-            self._data_paths, channel_file_prefix
+            self.data_paths, channel_file_prefix
         )
 
         # Create simple sorted list of each timepoint and channel
@@ -259,6 +257,30 @@ class SldyImage:
 
         return self._metadata
 
+    @property
+    def data_paths(self) -> typing.Set[pathlib.Path]:
+        if not self._data_paths:
+            glob_matcher = self.image_directory / f"{self._data_file_prefix}*.npy"
+            data_path_matches = self._fs.glob(f"{glob_matcher}")
+            self._data_paths = set(
+                [pathlib.Path(data_path) for data_path in data_path_matches]
+            )
+
+            if not self._data_paths:
+                self._data_paths = {
+                    self.image_directory / filename
+                    for filename in os.listdir(f"{self.image_directory}")
+                    if filename.startswith(self._data_file_prefix)
+                    and filename.endswith(".npy")
+                }
+
+            if not self._data_paths:
+                raise FileNotFoundError(
+                    "Unable to find data paths inside SLDY image directory"
+                )
+
+        return self._data_paths
+
     def get_data(
         self,
         timepoint: typing.Optional[int],
@@ -283,7 +305,7 @@ class SldyImage:
         data: np.ndarray
             Numpy representation of the image data found.
         """
-        data_paths = self._data_paths
+        data_paths = self.data_paths
         if timepoint is not None:
             data_paths = data_paths.intersection(
                 self._timepoint_to_data_paths[timepoint]

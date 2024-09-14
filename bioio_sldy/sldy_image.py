@@ -36,7 +36,9 @@ class SldyImage:
     _data_paths: typing.Set[pathlib.Path] = set()
 
     @staticmethod
-    def _yaml_mapping(loader: yaml.Loader, node: yaml.Node, deep: bool = False) -> dict:
+    def _yaml_mapping(
+        loader: yaml.CLoader, node: yaml.Node, deep: bool = False
+    ) -> dict:
         """
         Static method intended to map key-value pairs found in image
         metadata yaml files to Python dictionaries.
@@ -108,7 +110,7 @@ class SldyImage:
         """
         try:
             with fs.open(yaml_path) as f:
-                return yaml.load(f, Loader=yaml.Loader)
+                return yaml.load(f, Loader=yaml.CLoader)
         except FileNotFoundError:
             if is_required:
                 raise
@@ -171,7 +173,7 @@ class SldyImage:
         yaml.add_constructor(
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
             SldyImage._yaml_mapping,
-            yaml.Loader,
+            yaml.CLoader,
         )
 
         self._fs = fs
@@ -218,6 +220,14 @@ class SldyImage:
         # Create simple sorted list of each timepoint and channel
         self.timepoints = sorted(self._timepoint_to_data_paths.keys())
         self.channels = sorted(self._channel_to_data_paths.keys())
+
+        self.sizeT = self._image_record["CImageRecord70"]["mNumTimepoints"]
+        self.sizeC = self._image_record["CImageRecord70"]["mNumChannels"]
+        self.sizeZ = self._image_record["CImageRecord70"]["mNumPlanes"]
+        self.sizeY = self._image_record["CImageRecord70"]["mHeight"]
+        self.sizeX = self._image_record["CImageRecord70"]["mWidth"]
+        # TODO check this but are all sldys uint16?  bioformats seems to say so
+        self.dtype = np.dtype(np.uint16)
 
     @property
     def metadata(self) -> typing.Dict[str, typing.Optional[dict]]:

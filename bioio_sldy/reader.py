@@ -5,6 +5,7 @@ import logging
 import pathlib
 import typing
 
+import dask
 import dask.array as da
 import numpy as np
 import xarray as xr
@@ -149,8 +150,13 @@ class Reader(reader.Reader):
         for timepoint in timepoints:
             data_for_timepoint: typing.List[da.Array] = []
             for channel in channels:
-                data = image.get_data(
+                value = dask.delayed(image.get_data)(
                     timepoint=timepoint, channel=channel, delayed=True
+                )
+                data = da.from_delayed(
+                    value,
+                    shape=(image.sizeZ, image.sizeY, image.sizeX),
+                    dtype=image.dtype,
                 )
                 data_for_timepoint.append(data)
 

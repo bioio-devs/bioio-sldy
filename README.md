@@ -37,7 +37,7 @@ passed in.
 from bioio import BioImage
 import bioio_sldy
 
-img = BioImage("my_file.sld", reader=bioio_ome_tiff.Reader)
+img = BioImage("my_file.sld", reader=bioio_sldy.Reader)
 img.data
 ```
 

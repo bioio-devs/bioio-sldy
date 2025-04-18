@@ -74,6 +74,7 @@ jobs:
       run: |
         python scripts/download_test_resources.py --debug
     - name: Run Tests
+      shell: bash
       run: just test
     - name: Upload Codecov
       uses: codecov/codecov-action@v5

@@ -6,9 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-# Test file resources
-bioio_sldy/tests/resources
-
 # Distribution / packaging
 .Python
 env/

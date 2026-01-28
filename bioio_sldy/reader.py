@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import datetime
 import logging
 import pathlib
 import typing
@@ -10,6 +11,7 @@ import dask.array as da
 import numpy as np
 import xarray as xr
 from bioio_base import constants, dimensions, exceptions, io, reader, transforms, types
+from bioio_base.standard_metadata import StandardMetadata
 from fsspec.spec import AbstractFileSystem
 
 from .sldy_image import SldyImage
@@ -296,3 +298,142 @@ class Reader(reader.Reader):
             self.physical_pixel_sizes.X,
         )
         return coords
+
+    @property
+    def objective(self) -> typing.Optional[str]:
+        """
+        Microscope objective description (e.g., '40x NA 1.15')
+        derived from SLDY metadata.
+
+        Returns
+        -------
+        Optional[str]
+            Human-readable objective string or None if unavailable.
+        """
+        try:
+            md = self.metadata
+            lens = md["image_record"]["CLensDef70"]
+            mag = lens["mActualMagnification"]
+            na = lens["mNA"]
+            return f"{mag}x NA {na}"
+        except Exception as exc:
+            log.warning(
+                "Failed to extract objective from SLDY metadata: %s", exc, exc_info=True
+            )
+            return None
+
+    @property
+    def imaging_datetime(self) -> typing.Optional[datetime.datetime]:
+        """
+        Acquisition datetime based on CImageRecord70 date/time fields.
+
+        Returns
+        -------
+        Optional[datetime.datetime]
+            Datetime of acquisition (or save) in local microscope time, or None.
+        """
+        try:
+            md = self.metadata
+            rec = md["image_record"]["CImageRecord70"]
+
+            year = int(rec["mYear"])
+            month = int(rec["mMonth"])
+            day = int(rec["mDay"])
+            hour = int(rec["mHour"])
+            minute = int(rec["mMinute"])
+            second = int(rec["mSecond"])
+
+            return datetime.datetime(year, month, day, hour, minute, second)
+        except Exception as exc:
+            log.warning(
+                "Failed to extract imaging datetime from SLDY metadata: %s",
+                exc,
+                exc_info=True,
+            )
+            return None
+
+    @property
+    def total_time_duration(self) -> typing.Optional[datetime.timedelta]:
+        """
+        Total acquisition duration as a timedelta.
+        Derived from elapsed_times.theElapsedTimes:
+        first cumulative timestamp → last cumulative timestamp.
+        """
+        try:
+            md = self.metadata
+            elapsed = md["elapsed_times"]["theElapsedTimes"]
+            values = list(elapsed)[1:]  # skip count
+
+            if len(values) < 2:
+                return None
+
+            duration_ms = float(values[-1] - values[0])
+            return datetime.timedelta(milliseconds=duration_ms)
+        except Exception as exc:
+            log.warning(
+                "Failed to extract total time duration from SLDY metadata: %s",
+                exc,
+                exc_info=True,
+            )
+            return None
+
+    @property
+    def timelapse_interval(self) -> typing.Optional[datetime.timedelta]:
+        """
+        Average time interval between timepoints as a timedelta.
+
+        Preferred source:
+        - annotation_record.CDataTableHeaderRecord70.mTimeInterval (ms)
+
+        Fallback:
+        - Mean Δ of elapsed_times.theElapsedTimes values (ms).
+        """
+        md = self.metadata
+
+        # Option 1 Explicit
+        try:
+            interval_ms = md["annotation_record"]["CDataTableHeaderRecord70"][
+                "mTimeInterval"
+            ]
+            return datetime.timedelta(milliseconds=float(interval_ms))
+        except Exception:
+            pass
+
+        # Option 2 Derived
+        try:
+            elapsed = md["elapsed_times"]["theElapsedTimes"]
+            values = list(elapsed)[1:]  # skip first entry (count)
+
+            if len(values) < 2:
+                return None
+
+            diffs = [b - a for a, b in zip(values, values[1:])]
+            if not diffs:
+                return None
+
+            avg_ms = sum(diffs) / len(diffs)
+            return datetime.timedelta(milliseconds=float(avg_ms))
+        except Exception as exc:
+            log.warning(
+                "Failed to extract timelapse interval from SLDY metadata: %s",
+                exc,
+                exc_info=True,
+            )
+            return None
+
+    @property
+    def standard_metadata(self) -> StandardMetadata:
+        """
+        Return the standard metadata for this reader, updating specific fields.
+
+        This implementation calls the base reader’s standard_metadata property
+        via super() and then assigns the new values.
+        """
+        metadata = super().standard_metadata
+        metadata.objective = self.objective
+        metadata.imaging_datetime = self.imaging_datetime
+        metadata.total_time_duration = self.total_time_duration
+        metadata.timelapse_interval = self.timelapse_interval
+        metadata.position_index = self.current_scene_index
+
+        return metadata

@@ -28,7 +28,7 @@ TEST_CASES = [
             "Pixel Size Z": None,
             "Position Index": None,
             "Row": None,
-            "Timelapse": True,
+            "Timelapse": False,
             "Timelapse Interval": datetime.timedelta(seconds=1800),
             "Total Time Duration": datetime.timedelta(
                 days=3, seconds=28800, microseconds=77000

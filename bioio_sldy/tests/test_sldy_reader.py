@@ -4,8 +4,10 @@
 import pathlib
 import typing
 
+import fsspec
 import numpy as np
 import pytest
+from bioio import BioImage
 from bioio_base import dimensions, exceptions, test_utilities
 
 from bioio_sldy import Reader
@@ -94,3 +96,30 @@ def test_sldy_reader(
         expected_physical_pixel_sizes=expected_physical_pixel_sizes,
         expected_metadata_type=dict,
     )
+
+
+@pytest.mark.parametrize("protocol", ["file", "memory"])
+def test_bioimage_detects_directory_image(
+    protocol: str, tmp_path: pathlib.Path
+) -> None:
+    fs = fsspec.filesystem(protocol)
+    root = f"{tmp_path}/experiment"
+    fs.makedirs(root)
+    for suffix in (".sldy", ".dir"):
+        fs.put(
+            str(LOCAL_RESOURCES_DIR / f"s1_t10_c1_z5{suffix}"),
+            f"{root}/s1_t10_c1_z5{suffix}",
+            recursive=True,
+        )
+
+    try:
+        img = BioImage(f"{protocol}://{root}")
+        assert isinstance(img.reader, Reader)
+        assert img.dims.T == 10
+    finally:
+        fs.rm(root, recursive=True)
+
+
+def test_sldy_reader_with_empty_directory(tmp_path: pathlib.Path) -> None:
+    with pytest.raises(exceptions.UnsupportedFileFormatError):
+        Reader(tmp_path)

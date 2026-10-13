@@ -33,7 +33,7 @@ class SldyImage:
     """
 
     _metadata: typing.Optional[typing.Dict[str, typing.Optional[dict]]] = None
-    _data_paths: typing.Set[pathlib.PurePosixPath] = set()
+    _data_paths: typing.Set[pathlib.PurePath] = set()
 
     @staticmethod
     def _yaml_mapping(
@@ -84,7 +84,7 @@ class SldyImage:
     @staticmethod
     def _get_yaml_contents(
         fs: AbstractFileSystem,
-        yaml_path: pathlib.PurePosixPath,
+        yaml_path: pathlib.PurePath,
         is_required: bool = True,
     ) -> typing.Optional[dict]:
         """
@@ -122,8 +122,8 @@ class SldyImage:
 
     @staticmethod
     def _get_dim_to_data_path_map(
-        data_paths: typing.Set[pathlib.PurePosixPath], dim_prefix: str
-    ) -> typing.Dict[int, typing.List[pathlib.PurePosixPath]]:
+        data_paths: typing.Set[pathlib.PurePath], dim_prefix: str
+    ) -> typing.Dict[int, typing.List[pathlib.PurePath]]:
         """
         Returns a dictionary mapping from an arbitrary dimension index to the list of
         data paths matching that dimension.
@@ -141,7 +141,7 @@ class SldyImage:
             Dictionary mapping from an arbitrary dimension index to the list of
             data paths matching that dimension.
         """
-        dim_to_data_paths: typing.Dict[int, typing.List[pathlib.PurePosixPath]] = {}
+        dim_to_data_paths: typing.Dict[int, typing.List[pathlib.PurePath]] = {}
         for data_path in data_paths:
             file_name = data_path.stem
             search_result = re.search(rf"{dim_prefix}(\d*)", file_name)
@@ -165,7 +165,7 @@ class SldyImage:
     def __init__(
         self,
         fs: AbstractFileSystem,
-        image_directory: pathlib.PurePosixPath,
+        image_directory: pathlib.PurePath,
         data_file_prefix: str,
         channel_file_prefix: str = "_Ch",
         timepoint_file_prefix: str = "_TP",
@@ -270,7 +270,7 @@ class SldyImage:
         return self._metadata
 
     @property
-    def data_paths(self) -> typing.Set[pathlib.PurePosixPath]:
+    def data_paths(self) -> typing.Set[pathlib.PurePath]:
         if not self._data_paths:
             glob_matcher = self.image_directory / f"{self._data_file_prefix}*.npy"
             data_path_matches = self._fs.glob(f"{glob_matcher}")

@@ -86,7 +86,9 @@ class Reader(reader.Reader):
         if len(sldy_files) == 1:
             path = pathlib.PurePosixPath(sldy_files[0])
         images = [
-            SldyImage(fs, pathlib.Path(image_dir), data_file_prefix=data_file_prefix)
+            SldyImage(
+                fs, pathlib.PurePosixPath(image_dir), data_file_prefix=data_file_prefix
+            )
             for image_dir in fs.glob(f"{path.with_suffix('.dir')}/*.imgdir")
         ]
         if not images:

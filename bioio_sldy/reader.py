@@ -81,15 +81,13 @@ class Reader(reader.Reader):
             A list of the acquisitions found at the path given
             ordered by their names
         """
-        path = str(path)
-        if fs.isdir(path) and not path.endswith(".dir"):
-            sldy_files = fs.glob(f"{path.rstrip('/')}/*.sldy")
-            if len(sldy_files) == 1:
-                path = sldy_files[0]
-        data_directory = pathlib.Path(path).with_suffix(".dir")
+        path = pathlib.PurePosixPath(str(path))
+        sldy_files = fs.glob(f"{path}/*.sldy")
+        if len(sldy_files) == 1:
+            path = pathlib.PurePosixPath(sldy_files[0])
         images = [
             SldyImage(fs, pathlib.Path(image_dir), data_file_prefix=data_file_prefix)
-            for image_dir in fs.glob(f"{data_directory}/*.imgdir")
+            for image_dir in fs.glob(f"{path.with_suffix('.dir')}/*.imgdir")
         ]
         if not images:
             raise ValueError("Unable to find any images within the image directory")

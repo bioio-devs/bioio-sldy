@@ -33,7 +33,7 @@ class SldyImage:
     """
 
     _metadata: typing.Optional[typing.Dict[str, typing.Optional[dict]]] = None
-    _data_paths: typing.Set[pathlib.Path] = set()
+    _data_paths: typing.Set[pathlib.PurePath] = set()
 
     @staticmethod
     def _yaml_mapping(
@@ -83,7 +83,9 @@ class SldyImage:
 
     @staticmethod
     def _get_yaml_contents(
-        fs: AbstractFileSystem, yaml_path: pathlib.Path, is_required: bool = True
+        fs: AbstractFileSystem,
+        yaml_path: pathlib.PurePath,
+        is_required: bool = True,
     ) -> typing.Optional[dict]:
         """
         Given a path to a yaml file will return a dictionary representation
@@ -120,8 +122,8 @@ class SldyImage:
 
     @staticmethod
     def _get_dim_to_data_path_map(
-        data_paths: typing.Set[pathlib.Path], dim_prefix: str
-    ) -> typing.Dict[int, typing.List[pathlib.Path]]:
+        data_paths: typing.Set[pathlib.PurePath], dim_prefix: str
+    ) -> typing.Dict[int, typing.List[pathlib.PurePath]]:
         """
         Returns a dictionary mapping from an arbitrary dimension index to the list of
         data paths matching that dimension.
@@ -139,7 +141,7 @@ class SldyImage:
             Dictionary mapping from an arbitrary dimension index to the list of
             data paths matching that dimension.
         """
-        dim_to_data_paths: typing.Dict[int, typing.List[pathlib.Path]] = {}
+        dim_to_data_paths: typing.Dict[int, typing.List[pathlib.PurePath]] = {}
         for data_path in data_paths:
             file_name = data_path.stem
             search_result = re.search(rf"{dim_prefix}(\d*)", file_name)
@@ -163,7 +165,7 @@ class SldyImage:
     def __init__(
         self,
         fs: AbstractFileSystem,
-        image_directory: pathlib.Path,
+        image_directory: pathlib.PurePath,
         data_file_prefix: str,
         channel_file_prefix: str = "_Ch",
         timepoint_file_prefix: str = "_TP",
@@ -268,12 +270,12 @@ class SldyImage:
         return self._metadata
 
     @property
-    def data_paths(self) -> typing.Set[pathlib.Path]:
+    def data_paths(self) -> typing.Set[pathlib.PurePath]:
         if not self._data_paths:
             glob_matcher = self.image_directory / f"{self._data_file_prefix}*.npy"
             data_path_matches = self._fs.glob(f"{glob_matcher}")
             self._data_paths = set(
-                [pathlib.Path(data_path) for data_path in data_path_matches]
+                [pathlib.PurePosixPath(data_path) for data_path in data_path_matches]
             )
 
             if not self._data_paths:
@@ -329,7 +331,7 @@ class SldyImage:
                 f"and channel {channel}, but instead found {len(data_paths)}."
             )
 
-        data = np.load(list(data_paths)[0], mmap_mode="r" if delayed else None)
+        data = np.load(str(list(data_paths)[0]), mmap_mode="r" if delayed else None)
 
         # Add empty Z dimension if not present already
         if len(data.shape) == 2:

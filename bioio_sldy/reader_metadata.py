@@ -31,3 +31,11 @@ class ReaderMetadata(bioio_base.reader_metadata.ReaderMetadata):
         from .reader import Reader
 
         return Reader
+
+    @staticmethod
+    def supports_directory_images() -> bool:
+        """
+        Returns True because a folder holding a .sldy and its .dir
+        is readable as an image.
+        """
+        return True

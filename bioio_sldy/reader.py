@@ -5,6 +5,7 @@ import datetime
 import logging
 import pathlib
 import typing
+from urllib.parse import urlparse
 
 import dask
 import dask.array as da
@@ -23,6 +24,20 @@ log = logging.getLogger(__name__)
 ###############################################################################
 
 DEFAULT_DATA_FILE_PREFIX = "ImageData"
+
+
+def _to_listable_url(
+    image: typing.Any, fs_kwargs: typing.Dict[str, typing.Any]
+) -> typing.Tuple[typing.Any, typing.Dict[str, typing.Any]]:
+    image, fs_kwargs = io.s3_https_to_s3(image, fs_kwargs)
+    if isinstance(image, str) and urlparse(image).scheme in ("http", "https"):
+        raise exceptions.UnsupportedFileFormatError(
+            "Reader",
+            image,
+            msg_extra="A directory can't be listed over HTTP(S). Use an S3 URL.",
+        )
+
+    return image, fs_kwargs
 
 
 class Reader(reader.Reader):
@@ -49,6 +64,16 @@ class Reader(reader.Reader):
     """
 
     _scenes: typing.Optional[typing.Tuple[str, ...]] = None
+
+    @classmethod
+    def is_supported_image(
+        cls,
+        image: types.ImageLike,
+        fs_kwargs: typing.Dict[str, typing.Any] = {},
+        **kwargs: typing.Any,
+    ) -> bool:
+        image, fs_kwargs = _to_listable_url(image, fs_kwargs)
+        return super().is_supported_image(image, fs_kwargs, **kwargs)
 
     @staticmethod
     def _is_supported_image(
@@ -105,6 +130,8 @@ class Reader(reader.Reader):
         data_file_prefix: str = DEFAULT_DATA_FILE_PREFIX,
         **kwargs: typing.Any,
     ):
+        image, fs_kwargs = _to_listable_url(image, fs_kwargs)
+
         # Expand details of provided image
         self._fs, self._path = io.pathlike_to_fs(
             image,

@@ -9,6 +9,7 @@ import typing
 
 import numpy as np
 import yaml
+from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 
 ###############################################################################
@@ -331,7 +332,12 @@ class SldyImage:
                 f"and channel {channel}, but instead found {len(data_paths)}."
             )
 
-        data = np.load(str(list(data_paths)[0]), mmap_mode="r" if delayed else None)
+        data_path = str(list(data_paths)[0])
+        if isinstance(self._fs, LocalFileSystem):
+            data = np.load(data_path, mmap_mode="r" if delayed else None)
+        else:
+            with self._fs.open(data_path) as f:
+                data = np.load(f)
 
         # Add empty Z dimension if not present already
         if len(data.shape) == 2:

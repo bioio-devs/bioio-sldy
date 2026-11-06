@@ -83,9 +83,9 @@ def test_sldy_standard_metadata(filename: str, expected_dict: Dict[str, Any]) ->
         if isinstance(expected, datetime.timedelta):
             assert isinstance(result, datetime.timedelta)
             diff = abs(result.total_seconds() - expected.total_seconds())
-            assert (
-                diff < 1e-3
-            ), f"{key} expected {expected}, got {result} (delta={diff}s)"
+            assert diff < 1e-3, (
+                f"{key} expected {expected}, got {result} (delta={diff}s)"
+            )
 
         # floats: approx compare
         elif isinstance(expected, float):

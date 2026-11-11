@@ -8,9 +8,8 @@ import fsspec
 import numpy as np
 import pytest
 from bioio import BioImage
-from bioio_base import dimensions, exceptions, io
+from bioio_base import dimensions, exceptions, io, test_utilities
 from bioio_base import reader as base_reader
-from bioio_base import test_utilities
 
 from bioio_sldy import Reader
 

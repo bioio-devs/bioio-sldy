@@ -16,6 +16,9 @@ from fsspec.spec import AbstractFileSystem
 
 log = logging.getLogger(__name__)
 
+# PyYAML built without libyaml (e.g. from source) has no CLoader
+YAML_LOADER = getattr(yaml, "CLoader", yaml.Loader)
+
 ###############################################################################
 
 
@@ -37,9 +40,7 @@ class SldyImage:
     _data_paths: typing.Set[pathlib.PurePath] = set()
 
     @staticmethod
-    def _yaml_mapping(
-        loader: yaml.CLoader, node: yaml.Node, deep: bool = False
-    ) -> dict:
+    def _yaml_mapping(loader: yaml.Loader, node: yaml.Node, deep: bool = False) -> dict:
         """
         Static method intended to map key-value pairs found in image
         metadata yaml files to Python dictionaries.
@@ -113,7 +114,7 @@ class SldyImage:
         """
         try:
             with fs.open(yaml_path) as f:
-                return yaml.load(f, Loader=yaml.CLoader)
+                return yaml.load(f, Loader=YAML_LOADER)
         except FileNotFoundError:
             if is_required:
                 raise
@@ -176,7 +177,7 @@ class SldyImage:
         yaml.add_constructor(
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
             SldyImage._yaml_mapping,
-            yaml.CLoader,
+            YAML_LOADER,
         )
 
         self._fs = fs
